@@ -12,8 +12,8 @@ const userSchema = mongoose.Schema({
     },
     email: {
         type: String,
-        required: [true,'email is required'],
-        unique: [true,'email exists, try Another!'],
+        required: [true, 'email is required'],
+        unique: [true, 'email exists, try Another!'],
         validate(value) {
             if (!validator.isEmail(value)) {
                 throw new Error('Email is invalid')
@@ -21,7 +21,12 @@ const userSchema = mongoose.Schema({
         },
     },
     phoneNum: {
-        type: Number
+        type: Number,
+        validate(value) {
+            if (value.toString().length !== 10) {
+                throw new Error('phone number length should be 10')
+            }
+        }
     },
     image: {
         type: Buffer
