@@ -5,35 +5,50 @@ const multer = require('multer')
 
 const upload = multer(
     {
-    limits: {
-        fileSize: 1024 * 1024 * 2
-    },
-    fileFilter(req, file, cb) {
-        if (!file.originalname.match(RegExp('\.(jpg|png|jpeg)$', 'i'))) {
-            return cb(new Error('file must be a image'))
+        limits: {
+            fileSize: 1024 * 1024 * 2
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.match(RegExp('\.(jpg|png|jpeg)$', 'i'))) {
+                return cb(new Error('file must be a image'))
+            }
+            cb(undefined, true)
         }
-        cb(undefined, true)
-    }
+    })
+
+const errorFormater = e => {
+    let errorsobj = {}
+    const errors = e.substring(e.indexOf(':') + 1).trim()
+    const errorsInArray = errors.split(',').map(err => err.trim())
+    errorsInArray.forEach(error => {
+        const [key, value] = error.split(':').map(err => err.trim())
+        errorsobj[key] = value
+    })
+    return errorsobj
 }
-)
 
 router.post('/save', upload.single('userImage'), async (req, res) => {
     const user = new User(req.body)
-    if(req.file){
+    if (req.file) {
         user.image = req.file.buffer
     }
+
     try {
         await user.save()
-        res.status(200).send({message:'user data saved'})
+        res.status(200).send({ message: 'user data saved' })
     } catch (e) {
-        res.status(400).send()
+        if(e.code === 11000){
+            return res.send({error:{dup:'email already exists!'}})
+        }
+        res.send({ error: errorFormater(e.message) })
     }
 }, (err, req, res, next) => {
-    res.status(500).send({ message: err.message })
+    res.status(500).send({ message: err.messaage })
 })
-router.get('/', async (req, res) => {
+router.get('/:email', async (req, res) => {
+    const email = req.params.email
     try {
-        const user = await User.findOne({ email: 'manchikantisaikiran7@gmail.com' })
+        const user = await User.findOne({ email })
         res.set('Content-Type', 'image/png')
         res.send(user.image)
     } catch (e) {
