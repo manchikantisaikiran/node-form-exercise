@@ -3,18 +3,17 @@ const User = require('../db/models/user')
 const router = express.Router()
 const multer = require('multer')
 
-const upload = multer(
-    {
-        limits: {
-            fileSize: 1024 * 1024 * 2
-        },
-        fileFilter(req, file, cb) {
-            if (!file.originalname.match(RegExp('\.(jpg|png|jpeg)$', 'i'))) {
-                return cb(new Error('file must be a image'))
-            }
-            cb(undefined, true)
+const upload = multer({
+    limits: {
+        fileSize: 1024 * 1024 * 2
+    },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(RegExp('\.(jpg|png|jpeg)$', 'i'))) {
+            return cb(new Error('file must be a image'))
         }
-    })
+        cb(undefined, true)
+    }
+})
 
 const errorFormater = e => {
     let errorsobj = {}
@@ -37,13 +36,13 @@ router.post('/save', upload.single('userImage'), async (req, res) => {
         await user.save()
         res.status(200).send({ message: 'user data saved' })
     } catch (e) {
-        if(e.code === 11000){
-            return res.send({error:{dup:'email already exists!'}})
+        if (e.code === 11000) {
+            return res.send({ error: { dup: 'email already exists!' } })
         }
         res.send({ error: errorFormater(e.message) })
     }
 }, (err, req, res, next) => {
-    res.status(500).send({ message: err.messaage })
+    res.send({ error: { fileError: err.message } })
 })
 router.get('/:email', async (req, res) => {
     const email = req.params.email
