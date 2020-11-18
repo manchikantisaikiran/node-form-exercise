@@ -23,7 +23,7 @@ const userSchema = mongoose.Schema({
     phoneNum: {
         type: Number,
         validate(value) {
-            if (value.toString().length !== 10) {
+            if (value && value.toString().length !== 10) {
                 throw new Error('phone number length should be 10')
             }
         }
